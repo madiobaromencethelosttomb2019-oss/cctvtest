@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CCTV Public Online - Pantau Kamera Publik Seluruh Dunia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ========== VARIABLES CSS (Dark/Light Mode) ========== */
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #1a1a2e;
+            --text-secondary: #666;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --btn-bg: #e0e0e0;
+            --btn-hover: #667eea;
+            --accent: #667eea;
+            --accent-hover: #5a67d8;
+            --danger: #e94560;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body.dark {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1f1f1f;
+            --bg-header: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --border-color: #333;
+            --shadow: 0 2px 10px rgba(0,0,0,0.3);
+            --btn-bg: #2a2a2a;
+            --btn-hover: #e94560;
+            --accent: #e94560;
+            --accent-hover: #d63d56;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-header);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        .header h1 span { color: var(--accent); }
+        .header p { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+        .status-badge {
+            display: inline-block;
+            background: #e94560;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-top: 8px;
+            color: white;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: var(--bg-secondary);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 85px;
+            z-index: 99;
+        }
+
+        .datetime { display: flex; gap: 20px; flex-wrap: wrap; }
+        .clock { font-size: 1.4rem; font-weight: bold; font-family: 'Courier New', monospace; color: var(--accent); }
+        .date { font-size: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+
+        .theme-toggle { display: flex; gap: 10px; align-items: center; }
+        .theme-btn {
+            background: var(--btn-bg);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        .theme-btn.active { background: var(--accent); color: white; }
+        .theme-btn:hover { background: var(--btn-hover); color: white; transform: translateY(-2px); }
+
+        /* Dashboard Button */
+        .dashboard-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .dashboard-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 145px;
+            z-index: 98;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cat-btn {
+            background: var(--btn-bg);
+            border: none;
+            color: var(--text-primary);
+            padding: 8px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        .cat-btn:hover, .cat-btn.active { background: var(--accent); color: white; transform: translateY(-2px); }
+
+        /* Search */
+        .search-container {
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        #searchInput {
+            width: 90%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+        }
+        #searchInput:focus { border-color: var(--accent); }
+
+        /* CCTV Grid */
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* CCTV Card */
+        .cctv-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        .cctv-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--accent); }
+        .video-wrapper { position: relative; background: #000; height: 220px; overflow: hidden; }
+        .video-wrapper iframe { width: 100%; height: 100%; border: none; }
+        .live-badge { position: absolute; top: 10px; left: 10px; background: #e94560; color: white; padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; z-index: 2; }
+        .location-badge { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; color: white; }
+        .cctv-info { padding: 12px; }
+        .cctv-title { font-weight: bold; margin-bottom: 5px; font-size: 1rem; color: var(--text-primary); }
+        .cctv-location { color: var(--text-secondary); font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+
+        /* Admin Badge on Card */
+        .admin-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: bold;
+            z-index: 2;
+            cursor: pointer;
+        }
+        .admin-badge:hover { background: var(--danger); }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content { width: 90%; max-width: 1200px; background: #000; border-radius: 12px; overflow: hidden; }
+        .modal-video { position: relative; padding-bottom: 56.25%; height: 0; }
+        .modal-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .modal-info { padding: 15px; background: var(--bg-secondary); color: var(--text-primary); }
+        .close-modal { position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; z-index: 1001; }
+        .close-modal:hover { color: var(--accent); }
+
+        /* ========== DASHBOARD PANEL ========== */
+        .dashboard-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .dashboard-overlay.active { display: flex; }
+        .dashboard-panel {
+            background: var(--bg-secondary);
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .dashboard-header {
+            background: var(--accent);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dashboard-header h2 { color: white; font-size: 1.3rem; }
+        .close-dashboard {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+        .dashboard-body {
+            padding: 20px;
+            max-height: calc(85vh - 130px);
+            overflow-y: auto;
+        }
+        .dashboard-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: var(--btn-bg);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        .tab-btn.active { background: var(--accent); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Form */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
+        .btn-submit {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background: var(--warning);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .data-table th { background: var(--accent); color: white; }
+        .data-table tr:hover { background: var(--bg-primary); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .no-results { text-align: center; padding: 50px; color: var(--text-secondary); grid-column: 1 / -1; }
+        .loading { text-align: center; padding: 50px; grid-column: 1 / -1; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .cctv-grid { grid-template-columns: 1fr; padding: 15px; }
+            .header h1 { font-size: 1.3rem; }
+            .top-bar { flex-direction: column; text-align: center; }
+            .categories { top: 180px; }
+            .data-table { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📹 <span>CCTV Public Online</span></h1>
+    <p>Pantau kondisi jalan, wisata, dan kota dari seluruh dunia</p>
+    <div class="status-badge">🔴 LIVE STREAMING (Sumber Publik)</div>
+</div>
+
+<div class="top-bar">
+    <div class="datetime">
+        <div class="clock" id="clock">--:--:--</div>
+        <div class="date" id="date">📅 --, -- --- ----</div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="dashboard-btn" id="openDashboardBtn">📊 Dashboard Admin</button>
+        <div class="theme-toggle">
+            <button class="theme-btn" id="lightModeBtn">☀️ Light</button>
+            <button class="theme-btn" id="darkModeBtn">🌙 Dark</button>
+        </div>
+    </div>
+</div>
+
+<div class="categories">
+    <button class="cat-btn active" data-cat="all">🌍 Semua</button>
+    <button class="cat-btn" data-cat="jalan">🛣️ Jalan Raya</button>
+    <button class="cat-btn" data-cat="wisata">🏖️ Wisata & Pantai</button>
+    <button class="cat-btn" data-cat="kota">🏙️ Perkotaan</button>
+    <button class="cat-btn" data-cat="bandara">✈️ Bandara</button>
+    <button class="cat-btn" data-cat="cuaca">⛅ Cuaca & Alam</button>
+</div>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Cari lokasi, kota, atau negara... (contoh: Jepang, Bali, New York)">
+</div>
+
+<div class="cctv-grid" id="cctvGrid">
+    <div class="loading"><div class="spinner"></div><p>Memuat daftar CCTV publik...</p></div>
+</div>
+
+<div class="footer">
+    <p>⚠️ Hanya menampilkan CCTV publik & live stream yang tersedia untuk umum.</p>
+    <p>© 2025 CCTV Public Online - Pantau Dunia secara Real-time</p>
+</div>
+
+<!-- Modal Video -->
+<div class="modal" id="modal">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content">
+        <div class="modal-video" id="modalVideo"></div>
+        <div class="modal-info" id="modalInfo"></div>
+    </div>
+</div>
+
+<!-- Dashboard Admin Panel -->
+<div class="dashboard-overlay" id="dashboardOverlay">
+    <div class="dashboard-panel">
+        <div class="dashboard-header">
+            <h2>📊 Dashboard Admin - Pengelolaan CCTV</h2>
+            <button class="close-dashboard" id="closeDashboardBtn">&times;</button>
+        </div>
+        <div class="dashboard-body">
+            <div class="dashboard-tabs">
+                <button class="tab-btn active" data-tab="add">➕ Tambah CCTV</button>
+                <button class="tab-btn" data-tab="list">📋 Daftar CCTV</button>
+                <button class="tab-btn" data-tab="stats">📈 Statistik</button>
+            </div>
+            
+            <!-- Tab Tambah CCTV -->
+            <div class="tab-content active" id="tab-add">
+                <h3>Tambah CCTV Baru</h3>
+                <form id="addCCTVForm">
+                    <div class="form-group">
+                        <label>Judul / Nama Lokasi</label>
+                        <input type="text" id="newTitle" required placeholder="Contoh: Tokyo Shibuya Crossing">
+                    </div>
+                    <div class="form-group">
+                        <label>Lokasi (Kota, Negara)</label>
+                        <input type="text" id="newLocation" required placeholder="Contoh: Tokyo, Jepang">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="newCategory">
+                            <option value="jalan">Jalan Raya</option>
+                            <option value="wisata">Wisata & Pantai</option>
+                            <option value="kota">Perkotaan</option>
+                            <option value="bandara">Bandara</option>
+                            <option value="cuaca">Cuaca & Alam</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>YouTube Embed URL</label>
+                        <input type="text" id="newEmbedUrl" required placeholder="https://www.youtube.com/embed/...?autoplay=1&mute=1">
+                        <small>Tips: Gunakan link embed dari YouTube (share → embed)</small>
+                    </div>
+                    <button type="submit" class="btn-submit">➕ Tambah CCTV</button>
+                </form>
+            </div>
+            
+            <!-- Tab Daftar CCTV -->
+            <div class="tab-content" id="tab-list">
+                <h3>Daftar Semua CCTV</h3>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="cctvTable">
+                        <thead>
+                            <tr><th>ID</th><th>Judul</th><th>Lokasi</th><th>Kategori</th><th>Aksi</th></tr>
+                        </thead>
+                        <tbody id="cctvTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tab Statistik -->
+            <div class="tab-content" id="tab-stats">
+                <h3>Statistik CCTV</h3>
+                <div id="statsContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== DATA CCTV DEFAULT ==========
+    let cctvData = [
+        { id: 1, title: "Tokyo Shibuya Crossing", location: "Tokyo, Jepang", category: "jalan", embedUrl: "https://www.youtube.com/embed/qWzCSlY__-E?autoplay=1&mute=1" },
+        { id: 2, title: "Jakarta - Jalan Sudirman", location: "Jakarta, Indonesia", category: "jalan", embedUrl: "https://www.youtube.com/embed/duZ2LBQV6Cg?autoplay=1&mute=1" },
+        { id: 3, title: "Times Square NYC", location: "New York, AS", category: "jalan", embedUrl: "https://www.youtube.com/embed/7K9tq9y7pH0?autoplay=1&mute=1" },
+        { id: 4, title: "Bangkok Sukhumvit", location: "Bangkok, Thailand", category: "jalan", embedUrl: "https://www.youtube.com/embed/1gJxRbcUqxQ?autoplay=1&mute=1" },
+        { id: 5, title: "Kuta Beach Bali", location: "Bali, Indonesia", category: "wisata", embedUrl: "https://www.youtube.com/embed/Lz2CpyqP09o?autoplay=1&mute=1" },
+        { id: 6, title: "Maldives Live View", location: "Maladewa", category: "wisata", embedUrl: "https://www.youtube.com/embed/bIuZgxP70kE?autoplay=1&mute=1" },
+        { id: 7, title: "Eiffel Tower Paris", location: "Paris, Prancis", category: "wisata", embedUrl: "https://www.youtube.com/embed/8KsUgVJv9uk?autoplay=1&mute=1" },
+        { id: 8, title: "Santorini Sunset", location: "Santorini, Yunani", category: "wisata", embedUrl: "https://www.youtube.com/embed/rIw8IhVr2xY?autoplay=1&mute=1" },
+        { id: 9, title: "Singapore Marina Bay", location: "Singapura", category: "kota", embedUrl: "https://www.youtube.com/embed/1qcrR04gDzY?autoplay=1&mute=1" },
+        { id: 10, title: "Kuala Lumpur KLCC", location: "Kuala Lumpur, Malaysia", category: "kota", embedUrl: "https://www.youtube.com/embed/DEZXDr7PPwE?autoplay=1&mute=1" },
+        { id: 11, title: "London Eye View", location: "London, Inggris", category: "kota", embedUrl: "https://www.youtube.com/embed/RtU_m8rT2cM?autoplay=1&mute=1" },
+        { id: 12, title: "Sydney Harbour", location: "Sydney, Australia", category: "kota", embedUrl: "https://www.youtube.com/embed/HKfBJ1jPQG4?autoplay=1&mute=1" },
+        { id: 13, title: "Changi Airport Singapore", location: "Singapura", category: "bandara", embedUrl: "https://www.youtube.com/embed/VpSjMhI6XQM?autoplay=1&mute=1" },
+        { id: 14, title: "Soekarno-Hatta Airport", location: "Tangerang, Indonesia", category: "bandara", embedUrl: "https://www.youtube.com/embed/bVYMRy5DE3A?autoplay=1&mute=1" },
+        { id: 15, title: "JFK Airport NYC", location: "New York, AS", category: "bandara", embedUrl: "https://www.youtube.com/embed/Y1yV-UyqGmI?autoplay=1&mute=1" },
+        { id: 16, title: "Mount Fuji Live", location: "Yamanashi, Jepang", category: "cuaca", embedUrl: "https://www.youtube.com/embed/SfdPZz46IuE?autoplay=1&mute=1" },
+        { id: 17, title: "Niagara Falls", location: "Ontario, Kanada", category: "cuaca", embedUrl: "https://www.youtube.com/embed/hWmJZ1W4KtA?autoplay=1&mute=1" },
+        { id: 18, title: "Bali Rice Fields", location: "Ubud, Bali", category: "wisata", embedUrl: "https://www.youtube.com/embed/8C5VrG9UX7Q?autoplay=1&mute=1" }
+    ];
+
+    // Load data dari localStorage
+    function loadData() {
+        const saved = localStorage.getItem('cctvData');
+        if (saved) {
+            cctvData = JSON.parse(saved);
+        } else {
+            saveData();
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('cctvData', JSON.stringify(cctvData));
+    }
+
+    // ========== GLOBAL VARIABLES ==========
+    let currentCategory = "all";
+    let searchQuery = "";
+
+    // ========== DOM ELEMENTS ==========
+    const grid = document.getElementById("cctvGrid");
+    const searchInput = document.getElementById("searchInput");
+    const modal = document.getElementById("modal");
+    const modalVideo = document.getElementById("modalVideo");
+    const modalInfo = document.getElementById("modalInfo");
+    const closeModalBtn = document.querySelector(".close-modal");
+
+    // Dashboard elements
+    const dashboardOverlay = document.getElementById("dashboardOverlay");
+    const openDashboardBtn = document.getElementById("openDashboardBtn");
+    const closeDashboardBtn = document.getElementById("closeDashboardBtn");
+
+    // ========== JAM & TANGGAL ==========
+    function updateDateTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        document.getElementById('date').textContent = `📅 ${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // ========== DARK/LIGHT MODE ==========
+    function setTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById('darkModeBtn')?.classList.add('active');
+            document.getElementById('lightModeBtn')?.classList.remove('active');
+        } else {
+            document.body.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            document.getElementById('lightModeBtn')?.classList.add('active');
+            document.getElementById('darkModeBtn')?.classList.remove('active');
+        }
+    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    document.getElementById('lightModeBtn')?.addEventListener('click', () => setTheme('light'));
+    document.getElementById('darkModeBtn')?.addEventListener('click', () => setTheme('dark'));
+
+    // ========== RENDER FUNCTIONS ==========
+    function getFilteredCCTV() {
+        let filtered = [...cctvData];
+        if (currentCategory !== "all") filtered = filtered.filter(cam => cam.category === currentCategory);
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(cam => cam.title.toLowerCase().includes(query) || cam.location.toLowerCase().includes(query));
+        }
+        return filtered;
+    }
+
+    function renderCCTV() {
+        const filtered = getFilteredCCTV();
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="no-results">😔 Tidak ditemukan CCTV di lokasi "${searchQuery}"</div>`;
+            return;
+        }
+        grid.innerHTML = filtered.map(cam => `
+            <div class="cctv-card" onclick="openModal(${cam.id})">
+                <div class="video-wrapper">
+                    <iframe src="${cam.embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <div class="live-badge">🔴 LIVE</div>
+                    <div class="location-badge">📍 ${cam.location}</div>
+                </div>
+                <div class="cctv-info">
+                    <div class="cctv-title">📹 ${cam.title}</div>
+                    <div class="cctv-location">📍 ${cam.location}</div>
+                </div>
+                <div class="admin-badge" onclick="event.stopPropagation(); openDashboardAndEdit(${cam.id})">✏️ Admin</div>
+            </div>
+        `).join("");
+    }
+
+    // ========== MODAL VIDEO ==========
+    function openModal(id) {
+        const cam = cctvData.find(c => c.id === id);
+        if (!cam) return;
+        modalVideo.innerHTML = `<iframe src="${cam.embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        modalInfo.innerHTML = `<h3>📹 ${cam.title}</h3><p>📍 ${cam.location}</p><p style="margin-top: 5px; font-size: 0.9rem; color: var(--text-secondary);">Sumber: CCTV Publik / Live Stream</p>`;
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModalFunc() {
+        modal.classList.remove("active");
+        modalVideo.innerHTML = "";
+        document.body.style.overflow = "";
+    }
+    closeModalBtn?.addEventListener("click", closeModalFunc);
+    modal?.addEventListener("click", (e) => { if (e.target === modal) closeModalFunc(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal.classList.contains("active")) closeModalFunc(); });
+
+    // ========== DASHBOARD FUNCTIONS ==========
+    function openDashboard() {
+        dashboardOverlay.classList.add("active");
+        renderTableData();
+        renderStats();
+    }
+
+    function closeDashboard() {
+        dashboardOverlay.classList.remove("active");
+    }
+
+    function renderTableData() {
+        const tbody = document.getElementById("cctvTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = cctvData.map(cam => `
+            <tr>
+                <td>${cam.id}</td>
+                <td>${cam.title}</td>
+                <td>${cam.location}</td>
+                <td>${cam.category}</td>
+                <td>
+                    <button class="btn-edit" onclick="editCCTV(${cam.id})">✏️ Edit</button>
+                    <button class="btn-danger" onclick="deleteCCTV(${cam.id})">🗑️ Hapus</button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    function renderStats() {
+        const stats = {
+            total: cctvData.length,
+            jalan: cctvData.filter(c => c.category === "jalan").length,
+            wisata: cctvData.filter(c => c.category === "wisata").length,
+            kota: cctvData.filter(c => c.category === "kota").length,
+            bandara: cctvData.filter(c => c.category === "bandara").length,
+            cuaca: cctvData.filter(c => c.category === "cuaca").length
+        };
+        document.getElementById("statsContainer").innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>📹 Total</h3><p style="font-size: 2rem; color: var(--accent);">${stats.total}</p><p>CCTV</p></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>🛣️ Jalan Raya</h3><p style="font-size: 2rem;">${stats.jalan}</p></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>🏖️ Wisata</h3><p style="font-size: 2rem;">${stats.wisata}</p></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>🏙️ Perkotaan</h3><p style="font-size: 2rem;">${stats.kota}</p></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>✈️ Bandara</h3><p style="font-size: 2rem;">${stats.bandara}</p></div>
+                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; text-align: center;"><h3>⛅ Cuaca</h3><p style="font-size: 2rem;">${stats.cuaca}</p></div>
+            </div>
+        `;
+    }
+
+    // Tambah CCTV
+    document.getElementById("addCCTVForm")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const newId = Math.max(...cctvData.map(c => c.id), 0) + 1;
+        const newCCTV = {
+            id: newId,
+            title: document.getElementById("newTitle").value,
+            location: document.getElementById("newLocation").value,
+            category: document.getElementById("newCategory").value,
+            embedUrl: document.getElementById("newEmbedUrl").value
+        };
+        cctvData.push(newCCTV);
+        saveData();
+        renderCCTV();
+        renderTableData();
+        renderStats();
+        document.getElementById("addCCTVForm").reset();
+        alert("✅ CCTV berhasil ditambahkan!");
+    });
+
+    // Edit CCTV
+    window.editCCTV = function(id) {
+        const cam = cctvData.find(c => c.id === id);
+        if (!cam) return;
+        const newTitle = prompt("Edit Judul:", cam.title);
+        if (newTitle) cam.title = newTitle;
+        const newLocation = prompt("Edit Lokasi:", cam.location);
+        if (newLocation) cam.location = newLocation;
+        const newUrl = prompt("Edit URL Embed:", cam.embedUrl);
+        if (newUrl) cam.embedUrl = newUrl;
+        saveData();
+        renderCCTV();
+        renderTableData();
+    };
+
+    // Hapus CCTV
+    window.deleteCCTV = function(id) {
+        if (confirm("Yakin ingin menghapus CCTV ini?")) {
+            cctvData = cctvData.filter(c => c.id !== id);
+            saveData();
+            renderCCTV();
+            renderTableData();
+            renderStats();
+            alert("🗑️ CCTV berhasil dihapus!");
+        }
+    };
+
+    function openDashboardAndEdit(id) {
+        openDashboard();
+        setTimeout(() => {
+            editCCTV(id);
+        }, 500);
+    }
+
+    // Tab dashboard
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+            document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+            if (btn.dataset.tab === "list") renderTableData();
+            if (btn.dataset.tab === "stats") renderStats();
+        });
+    });
+
+    openDashboardBtn?.addEventListener("click", openDashboard);
+    closeDashboardBtn?.addEventListener("click", closeDashboard);
+    dashboardOverlay?.addEventListener("click", (e) => { if (e.target === dashboardOverlay) closeDashboard(); });
+
+    // ========== EVENT LISTENERS ==========
+    document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentCategory = btn.dataset.cat;
+            renderCCTV();
+        });
+    });
+    searchInput?.addEventListener("input", (e) => { searchQuery = e.target.value; renderCCTV(); });
+
+    // ========== INIT ==========
+    loadData();
+    renderCCTV();
+
+    window.openModal = openModal;
+    window.closeModal = closeModalFunc;
+    window.editCCTV = editCCTV;
+    window.deleteCCTV = deleteCCTV;
+    window.openDashboardAndEdit = openDashboardAndEdit;
+</script>
+</body>
+</html>
