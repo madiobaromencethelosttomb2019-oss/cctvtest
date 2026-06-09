@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CCTV Public Online - Pantau Kamera Publik Seluruh Dunia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #e94560;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header h1 span {
+            color: #e94560;
+        }
+
+        .header p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #e94560;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-top: 8px;
+        }
+
+        /* Kategori Tab */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: #0f0f1a;
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .cat-btn {
+            background: #1a1a2e;
+            border: none;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .cat-btn:hover, .cat-btn.active {
+            background: #e94560;
+            transform: translateY(-2px);
+        }
+
+        /* Search Bar */
+        .search-container {
+            padding: 15px 20px;
+            background: #0f0f1a;
+            text-align: center;
+        }
+
+        #searchInput {
+            width: 90%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            background: #1a1a2e;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        #searchInput::placeholder {
+            color: #666;
+        }
+
+        #searchInput:focus {
+            border: 1px solid #e94560;
+        }
+
+        /* Grid CCTV */
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Card CCTV */
+        .cctv-card {
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: 1px solid #222;
+        }
+
+        .cctv-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-color: #e94560;
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #e94560;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .location-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cctv-info {
+            padding: 12px;
+        }
+
+        .cctv-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .cctv-location {
+            color: #aaa;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Modal Fullscreen */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 1200px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-video {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+        }
+
+        .modal-video iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .modal-info {
+            padding: 15px;
+            background: #1a1a2e;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .close-modal:hover {
+            color: #e94560;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #666;
+            font-size: 0.8rem;
+            border-top: 1px solid #222;
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            grid-column: 1 / -1;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .cctv-grid {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            .categories {
+                top: 85px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .video-wrapper {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📹 <span>CCTV Public Online</span></h1>
+    <p>Pantau kondisi jalan, wisata, dan kota dari seluruh dunia</p>
+    <div class="status-badge">🔴 LIVE STREAMING (Sumber Publik)</div>
+</div>
+
+<div class="categories">
+    <button class="cat-btn active" data-cat="all">🌍 Semua</button>
+    <button class="cat-btn" data-cat="jalan">🛣️ Jalan Raya</button>
+    <button class="cat-btn" data-cat="wisata">🏖️ Wisata & Pantai</button>
+    <button class="cat-btn" data-cat="kota">🏙️ Perkotaan</button>
+    <button class="cat-btn" data-cat="bandara">✈️ Bandara</button>
+    <button class="cat-btn" data-cat="cuaca">⛅ Cuaca & Alam</button>
+</div>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Cari lokasi, kota, atau negara... (contoh: Jepang, Bali, New York)">
+</div>
+
+<div class="cctv-grid" id="cctvGrid">
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Memuat daftar CCTV publik...</p>
+    </div>
+</div>
+
+<div class="footer">
+    <p>⚠️ Hanya menampilkan CCTV publik & live stream yang tersedia untuk umum. Sumber dari YouTube Live, Webcam Publik, dan Pemerintah.</p>
+    <p>© 2025 CCTV Public Online - Pantau Dunia secara Real-time</p>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content">
+        <div class="modal-video" id="modalVideo"></div>
+        <div class="modal-info" id="modalInfo"></div>
+    </div>
+</div>
+
+<script>
+    // DATA CCTV PUBLIK (Live Stream dari sumber publik/YouTube)
+    // Semua link adalah live stream publik yang tersedia di YouTube
+    const cctvData = [
+        // JALAN RAYA
+        { id: 1, title: "Tokyo Shibuya Crossing", location: "Tokyo, Jepang", category: "jalan", embedUrl: "https://www.youtube.com/embed/qWzCSlY__-E?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/qWzCSlY__-E/maxresdefault.jpg" },
+        { id: 2, title: "Jakarta - Jalan Sudirman", location: "Jakarta, Indonesia", category: "jalan", embedUrl: "https://www.youtube.com/embed/duZ2LBQV6Cg?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/duZ2LBQV6Cg/maxresdefault.jpg" },
+        { id: 3, title: "Times Square NYC", location: "New York, AS", category: "jalan", embedUrl: "https://www.youtube.com/embed/7K9tq9y7pH0?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/7K9tq9y7pH0/maxresdefault.jpg" },
+        { id: 4, title: "Bangkok Sukhumvit", location: "Bangkok, Thailand", category: "jalan", embedUrl: "https://www.youtube.com/embed/1gJxRbcUqxQ?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/1gJxRbcUqxQ/maxresdefault.jpg" },
+        
+        // WISATA
+        { id: 5, title: "Kuta Beach Bali", location: "Bali, Indonesia", category: "wisata", embedUrl: "https://www.youtube.com/embed/Lz2CpyqP09o?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/Lz2CpyqP09o/maxresdefault.jpg" },
+        { id: 6, title: "Maldives Live View", location: "Maladewa", category: "wisata", embedUrl: "https://www.youtube.com/embed/bIuZgxP70kE?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/bIuZgxP70kE/maxresdefault.jpg" },
+        { id: 7, title: "Eiffel Tower Paris", location: "Paris, Prancis", category: "wisata", embedUrl: "https://www.youtube.com/embed/8KsUgVJv9uk?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/8KsUgVJv9uk/maxresdefault.jpg" },
+        { id: 8, title: "Santorini Sunset", location: "Santorini, Yunani", category: "wisata", embedUrl: "https://www.youtube.com/embed/rIw8IhVr2xY?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/rIw8IhVr2xY/maxresdefault.jpg" },
+        
+        // KOTA
+        { id: 9, title: "Singapore Marina Bay", location: "Singapura", category: "kota", embedUrl: "https://www.youtube.com/embed/1qcrR04gDzY?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/1qcrR04gDzY/maxresdefault.jpg" },
+        { id: 10, title: "Kuala Lumpur KLCC", location: "Kuala Lumpur, Malaysia", category: "kota", embedUrl: "https://www.youtube.com/embed/DEZXDr7PPwE?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/DEZXDr7PPwE/maxresdefault.jpg" },
+        { id: 11, title: "London Eye View", location: "London, Inggris", category: "kota", embedUrl: "https://www.youtube.com/embed/RtU_m8rT2cM?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/RtU_m8rT2cM/maxresdefault.jpg" },
+        { id: 12, title: "Sydney Harbour", location: "Sydney, Australia", category: "kota", embedUrl: "https://www.youtube.com/embed/HKfBJ1jPQG4?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/HKfBJ1jPQG4/maxresdefault.jpg" },
+        
+        // BANDARA
+        { id: 13, title: "Changi Airport Singapore", location: "Singapura", category: "bandara", embedUrl: "https://www.youtube.com/embed/VpSjMhI6XQM?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/VpSjMhI6XQM/maxresdefault.jpg" },
+        { id: 14, title: "Soekarno-Hatta Airport", location: "Tangerang, Indonesia", category: "bandara", embedUrl: "https://www.youtube.com/embed/bVYMRy5DE3A?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/bVYMRy5DE3A/maxresdefault.jpg" },
+        { id: 15, title: "JFK Airport NYC", location: "New York, AS", category: "bandara", embedUrl: "https://www.youtube.com/embed/Y1yV-UyqGmI?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/Y1yV-UyqGmI/maxresdefault.jpg" },
+        
+        // CUACA & ALAM
+        { id: 16, title: "Mount Fuji Live", location: "Yamanashi, Jepang", category: "cuaca", embedUrl: "https://www.youtube.com/embed/SfdPZz46IuE?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/SfdPZz46IuE/maxresdefault.jpg" },
+        { id: 17, title: "Niagara Falls", location: "Ontario, Kanada", category: "cuaca", embedUrl: "https://www.youtube.com/embed/hWmJZ1W4KtA?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/hWmJZ1W4KtA/maxresdefault.jpg" },
+        { id: 18, title: "Bali Rice Fields", location: "Ubud, Bali", category: "wisata", embedUrl: "https://www.youtube.com/embed/8C5VrG9UX7Q?autoplay=1&mute=1", thumbnail: "https://img.youtube.com/vi/8C5VrG9UX7Q/maxresdefault.jpg" }
+    ];
+
+    let currentCategory = "all";
+    let searchQuery = "";
+
+    // DOM Elements
+    const grid = document.getElementById("cctvGrid");
+    const searchInput = document.getElementById("searchInput");
+    const modal = document.getElementById("modal");
+    const modalVideo = document.getElementById("modalVideo");
+    const modalInfo = document.getElementById("modalInfo");
+    const closeModalBtn = document.querySelector(".close-modal");
+
+    // Filter CCTV berdasarkan kategori & search
+    function getFilteredCCTV() {
+        let filtered = [...cctvData];
+        
+        // Filter kategori
+        if (currentCategory !== "all") {
+            filtered = filtered.filter(cam => cam.category === currentCategory);
+        }
+        
+        // Filter search
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(cam => 
+                cam.title.toLowerCase().includes(query) || 
+                cam.location.toLowerCase().includes(query)
+            );
+        }
+        
+        return filtered;
+    }
+
+    // Render CCTV ke grid
+    function renderCCTV() {
+        const filtered = getFilteredCCTV();
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="no-results">😔 Tidak ditemukan CCTV di lokasi "${searchQuery}"</div>`;
+            return;
+        }
+        
+        grid.innerHTML = filtered.map(cam => `
+            <div class="cctv-card" onclick="openModal(${cam.id})">
+                <div class="video-wrapper">
+                    <iframe 
+                        src="${cam.embedUrl}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                    <div class="live-badge">🔴 LIVE</div>
+                    <div class="location-badge">
+                        📍 ${cam.location}
+                    </div>
+                </div>
+                <div class="cctv-info">
+                    <div class="cctv-title">📹 ${cam.title}</div>
+                    <div class="cctv-location">📍 ${cam.location}</div>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // Buka modal fullscreen
+    function openModal(id) {
+        const cam = cctvData.find(c => c.id === id);
+        if (!cam) return;
+        
+        modalVideo.innerHTML = `<iframe src="${cam.embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        modalInfo.innerHTML = `
+            <h3>📹 ${cam.title}</h3>
+            <p>📍 ${cam.location}</p>
+            <p style="margin-top: 5px; font-size: 0.9rem; color: #aaa;">Sumber: CCTV Publik / Live Stream</p>
+        `;
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+    }
+
+    // Tutup modal
+    function closeModal() {
+        modal.classList.remove("active");
+        modalVideo.innerHTML = "";
+        document.body.style.overflow = "";
+    }
+
+    // Event listeners
+    document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentCategory = btn.dataset.cat;
+            renderCCTV();
+        });
+    });
+
+    searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        renderCCTV();
+    });
+
+    closeModalBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("active")) closeModal();
+    });
+
+    // Inisialisasi
+    renderCCTV();
+
+    // Expose ke global
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+</script>
+</body>
+</html>
